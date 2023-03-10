@@ -13,7 +13,7 @@ class AccountBankUser extends Model
         'id',
         'id_user',
         'va_account',
-        'bank_code'
+        'bank_code',
     ];
     public $incrementing = false;
 
