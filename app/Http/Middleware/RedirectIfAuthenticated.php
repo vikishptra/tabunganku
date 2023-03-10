@@ -22,11 +22,10 @@ class RedirectIfAuthenticated
         // Get the user from the authenticated guard (e.g. api, web, etc)
         $user = $request->user();
     
-        // Compare the user's refresh token with the one stored in the database
         if ($user && $user->refresh_token !== $request->bearerToken()) {
-            return redirect()->route('login');
-        }
-    
+            return redirect()->route('unauthenticated');
+         }
+         
         return $next($request);
     }
     

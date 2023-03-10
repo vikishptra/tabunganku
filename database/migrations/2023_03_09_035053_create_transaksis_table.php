@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('transaksis', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->string('id_user');
-            $table->string('bank_code');
             $table->string('status');
             $table->bigInteger('amount');
+            $table->string('va_account');
             $table->foreign('id_user')
                 ->references('id')
                 ->on('users')

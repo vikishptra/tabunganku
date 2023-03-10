@@ -11,7 +11,6 @@ use App\Models\User;
 
 
 
-
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
@@ -41,6 +40,7 @@ class Controller extends BaseController
 
     protected function createNewToken($token){
         $user = auth()->user();
+        
         $user->update(['refresh_token' => $token]);
         $responseData = [
             'success' => true,
@@ -50,6 +50,7 @@ class Controller extends BaseController
         if (!empty($token)) {
             $responseData['access_token'] = $token;
         }
+
         return response()->json($responseData, 200);
     }
     

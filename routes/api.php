@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TransaksiVAController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,11 +28,13 @@ Route::group([
     Route::post('/register', [UserController::class, 'register']);   
     Route::post('/login', [UserController::class, 'login']);  
     Route::get('/user-profile',[UserController::class, 'userProfile']); 
-});  
-Route::get('/login', function () {
-    return redirect('https://google.com');
-})->name('login');
+    Route::post('/transaksi', [TransaksiVAController::class, 'chargeVA']);  
 
+});  
+
+Route::get('/unauthenticated', function () {
+    return response()->json(['message' => 'Unauthenticated'], 401);
+})->name('unauthenticated');
 
 
 

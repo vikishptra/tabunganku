@@ -42,7 +42,7 @@ class User extends Authenticatable implements JWTSubject
         'verification_code',
         'status',
         'money',
-
+        
     ];
 
     /**
@@ -55,6 +55,7 @@ class User extends Authenticatable implements JWTSubject
     ];
 
     public $incrementing = false;
+    
     protected static function boot()
     {
         parent::boot();
