@@ -5,25 +5,17 @@ namespace App\Http\Controllers;
 use Validator;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Http\Requests\RegisterUserRequest;
+use App\Http\Requests\LoginUserRequest;
 
 class UserController extends Controller
 {
-    public function register(Request $request) {
+    public function register(RegisterUserRequest $request) {
 
         try {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|between:2,100',
-                'email' => 'required|string|email|max:100|unique:users',
-                'password' => 'required|string',
-                'confirm_password'=> 'required|string|same:password',
-            ]);
-            if ($validator->fails()) {
-                    $errors = array_values(array_filter($validator->errors()->all()));
-                    return $this->messagesError($errors, 400);
-            }
             $verificationCode = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4) . mt_rand(1000, 9999);
             $user = User::create(array_merge(
-                $validator->validated(),
+                $request->validated(),
                 [
                     'password' => bcrypt($request->password),
                     'status'=> false,
@@ -35,26 +27,14 @@ class UserController extends Controller
 
         } catch (\Exception $e) {
             return $this->messagesError('Terjadi Kesalahan'.$e->getMessage(),400);
-        }
-        
-        
-        
+        }   
 
     }
 
-    public function login(Request $request){
+    public function login(LoginUserRequest $request){
 
         try {
-            $validator = Validator::make($request->all(), [
-                'email' => 'required|email',
-                'password' => 'required|string',
-            ]);
-            if ($validator->fails()) {
-                $errors = array_values(array_filter($validator->errors()->all()));
-                return $this->messagesError( $errors, 400);
-            }
-    
-            if (! $token = auth()->attempt($validator->validated())) {
+            if (! $token = auth()->attempt($request->validated())) {
                 return $this->messagesError('Email atau password anda salah !',400);
             }
             $user = auth()->user();
@@ -71,7 +51,6 @@ class UserController extends Controller
     	
     }
     
-
     public function userProfile(Request $request)
     {
         try {
@@ -86,7 +65,6 @@ class UserController extends Controller
             return $this->messagesError('Terjadi Kesalahan'.$e->getMessage(),400);
 
         }
-       
     }
     
 }
