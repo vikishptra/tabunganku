@@ -40,7 +40,6 @@ class Controller extends BaseController
 
     protected function createNewToken($token){
         $user = auth()->user();
-        
         $user->update(['refresh_token' => $token]);
         $responseData = [
             'success' => true,
