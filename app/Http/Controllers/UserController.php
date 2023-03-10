@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Requests\RegisterUserRequest;
 use App\Http\Requests\LoginUserRequest;
+use App\Models\DetailSaldoUser;
 
 class UserController extends Controller
 {
@@ -23,6 +24,14 @@ class UserController extends Controller
                     'verification_code'=>$verificationCode
                 ]
                     ));
+
+            $saldo_user = DetailSaldoUser::create(array_merge(
+                [
+                    'id_user' => $user->id,
+                    'saldo' => 0
+                ]
+                ));
+                
             return $this->messagesSuccess($user,"ok success", 201);
 
         } catch (\Exception $e) {

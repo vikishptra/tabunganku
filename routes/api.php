@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\TransaksiVAController;
+use App\Http\Controllers\BankTransferController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,7 +28,7 @@ Route::group([
     Route::post('/register', [UserController::class, 'register']);   
     Route::post('/login', [UserController::class, 'login']);  
     Route::get('/user-profile',[UserController::class, 'userProfile']); 
-    Route::post('/transaksi', [TransaksiVAController::class, 'chargeVA']);  
+    Route::post('/transaksi', [BankTransferController::class, 'createVaBankUser']);  
 
 });  
 

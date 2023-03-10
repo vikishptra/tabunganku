@@ -5,15 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Transaksi extends Model
+class AccountBankUser extends Model
 {
     use HasFactory;
     protected $primaryKey = 'id';
     protected $fillable = [
         'id',
         'id_user',
-        'status',
-        'amount'
+        'va_account',
+        'bank_code'
     ];
     public $incrementing = false;
 

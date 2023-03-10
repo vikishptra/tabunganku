@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->boolean('status');
             $table->string('password');
-            $table->string('money');
             $table->string('verification_code');
             $table->text('refresh_token')->nullable();
             $table->timestamps();

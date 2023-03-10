@@ -23,7 +23,6 @@ class User extends Authenticatable implements JWTSubject
         'status',
         'verification_code',
         'refresh_token',
-        'money',
         'name',
         'email',
         'password',
@@ -41,7 +40,6 @@ class User extends Authenticatable implements JWTSubject
         'refresh_token',
         'verification_code',
         'status',
-        'money',
         
     ];
 

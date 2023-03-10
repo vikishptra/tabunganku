@@ -11,18 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('account_bank_users', function (Blueprint $table) {
-            $table->string('id')->primary();
+        Schema::create('detail_saldo_users', function (Blueprint $table) {
             $table->string('id_user');
-            $table->string('va_account');
-            $table->string('bank_code');
+            $table->bigInteger('saldo');
             $table->foreign('id_user')
-                ->references('id')
-                ->on('users')
-                ->onDelete('cascade');
+            ->references('id')
+            ->on('users')
+            ->onDelete('cascade');
             $table->timestamps();
         });
-        
     }
 
     /**
@@ -30,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('account_bank_users');
+        Schema::dropIfExists('detail_saldo_users');
     }
 };
