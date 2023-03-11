@@ -83,16 +83,19 @@ class BankTransferController extends Controller
                 'bank_code' => $va_account->bank_code
             ];
 
-            return $this->messagesSuccess($response, "OK", 200);
+            return $this->messagesSuccess($response, "ok success", 200);
         } else {
             // Jika Virtual Account Bank belum dibuat sebelumnya, buat Virtual Account Bank baru pada Xendit dan simpan data ke database
             $response = $this->createVaBankUser($request);
+            if ($response == NULL) {
+                return $this->messagesError('Terjadi Kesalsahan Mohon Di Coba Lagi', 400);
+            }
             $data = $response->getData();
             $response = [
                 'va_account' => $data->data->va_account,
                 'bank_code' => $data->data->bank_code
             ];
-            return $this->messagesSuccess($response, "OK", 200);
+            return $this->messagesSuccess($response, "ok success", 200);
             
         }
     }catch (\Exception $e) {
