@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BankTransferController;
+use App\Http\Controllers\RuleTransaksiController;
+;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +32,9 @@ Route::group([
     Route::get('/user-profile',[UserController::class, 'userProfile']); 
     Route::get('/virtual-account', [BankTransferController::class, 'getVaBankUser']);  
     Route::post('/callback', [BankTransferController::class, 'callbackBank']);
+
+
+    Route::post('/rule-bank', [RuleTransaksiController::class, 'createRuleBank']);
 });  
 
 Route::get('/unauthenticated', function () {

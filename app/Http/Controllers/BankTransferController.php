@@ -12,6 +12,8 @@ use App\Http\Requests\CreateGetVABankUser;
 use Illuminate\Http\JsonResponse;
 use App\Models\DetailTransaksiBank;
 use App\Models\DetailSaldoUser;
+use App\Models\RuleTransaksiBank;
+
 
 class BankTransferController extends Controller
 {
@@ -138,15 +140,19 @@ class BankTransferController extends Controller
             'amount' => $responseXendit['amount'],
             'status_trx' => "SUCCESS",
         ]);
-
+        $ruleTransaksi = RuleTransaksiBank::where('bank_code', $request->bank_code)->first();
         $detailSaldoUser = DetailSaldoUser::where('id_user', $user->id)->first();
         $detailSaldoUser->saldo += $responseXendit['amount'];
+        $detailSaldoUser->saldo -= $ruleTransaksi->rule_transaksi;
         $detailSaldoUser->save();
         
 
         return $this->messagesSuccess($responseXendit, "ok success", 200);
 
     }
+
+
+    
 
 }
 
