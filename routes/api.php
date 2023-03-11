@@ -29,6 +29,7 @@ Route::group([
     Route::post('/login', [UserController::class, 'login']);  
     Route::get('/user-profile',[UserController::class, 'userProfile']); 
     Route::get('/virtual-account', [BankTransferController::class, 'getVaBankUser']);  
+    Route::post('/callback', [BankTransferController::class, 'callbackBank']);
 });  
 
 Route::get('/unauthenticated', function () {

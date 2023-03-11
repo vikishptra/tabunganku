@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('detail_saldo_users', function (Blueprint $table) {
+            $table->string('id')->primary()->charset('utf8');
             $table->string('id_user');
             $table->bigInteger('saldo');
             $table->foreign('id_user')

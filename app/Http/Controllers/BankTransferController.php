@@ -10,11 +10,12 @@ use App\Models\AccountBankUser;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\CreateGetVABankUser;
 use Illuminate\Http\JsonResponse;
+use App\Models\DetailTransaksiBank;
+use App\Models\DetailSaldoUser;
 
 class BankTransferController extends Controller
 {
-    public function createVaBankUser(CreateGetVABankUser $request)
-    {
+    public function createVaBankUser(CreateGetVABankUser $request){
         try {
             $secret_key = 'Basic ' . config('xendit.key_auth');
             $external_id = Str::random(10);
@@ -68,8 +69,9 @@ class BankTransferController extends Controller
         }
     }
 
-    public function getVABankUser(CreateGetVABankUser $request)
-{
+
+
+    public function getVABankUser(CreateGetVABankUser $request){
     try {
         $user = auth()->user();
         // Cek apakah Virtual Account Bank sudah dibuat sebelumnya
@@ -87,10 +89,10 @@ class BankTransferController extends Controller
         } else {
             // Jika Virtual Account Bank belum dibuat sebelumnya, buat Virtual Account Bank baru pada Xendit dan simpan data ke database
             $response = $this->createVaBankUser($request);
-            if ($response == NULL) {
-                return $this->messagesError('Terjadi Kesalsahan Mohon Di Coba Lagi', 400);
-            }
             $data = $response->getData();
+            if ($data->messages != "ok success") {
+               return $this->messagesError('Terjadi Kesalahan '.$data->messages, 400);
+            }
             $response = [
                 'va_account' => $data->data->va_account,
                 'bank_code' => $data->data->bank_code
@@ -102,6 +104,50 @@ class BankTransferController extends Controller
         return $this->messagesError('Terjadi Kesalsahan ' . $e->getMessage(), 400);
         }
     }
+
+
+    public function callbackBank(Request $request){
+        $secret_key = 'Basic ' . config('xendit.key_auth');
+        $response = $request->all();
+        $user = auth()->user();
+        $payment_id= "payment_id=".$response['payment_id'];
+        $detailTransaksiUser = DetailTransaksiBank::where('id', $response['payment_id'])->first();
+        if ($detailTransaksiUser != NULL) {
+            return $this->messagesError('Forbidden', 403);
+        }        
+
+        $data_request = Http::withHeaders([
+            'Authorization' => $secret_key
+        ])->get('https://api.xendit.co/callback_virtual_account_payments/'.$payment_id);
+        $responseXendit = $data_request->json();
+        if ($responseXendit['amount'] == NULL || $responseXendit['amount'] < 0) {
+            $detailTransaksiBank = DetailTransaksiBank::create([
+                'id' => $responseXendit['payment_id'],
+                'id_user' => $user->id,
+                'id_va_account' => $responseXendit['external_id'],
+                'amount' => $response['amount'],
+                'status_trx' => "INVALID",
+            ]);
+            return $this->messagesError('Gagal topup saldo anda, Mohon di coba lagi ! ', 400);
+        }
+
+        $detailTransaksiBank = DetailTransaksiBank::create([
+            'id' => $responseXendit['payment_id'],
+            'id_user' => $user->id,
+            'id_va_account' => $responseXendit['external_id'],
+            'amount' => $responseXendit['amount'],
+            'status_trx' => "SUCCESS",
+        ]);
+
+        $detailSaldoUser = DetailSaldoUser::where('id_user', $user->id)->first();
+        $detailSaldoUser->saldo += $responseXendit['amount'];
+        $detailSaldoUser->save();
+        
+
+        return $this->messagesSuccess($responseXendit, "ok success", 200);
+
+    }
+
 }
 
 

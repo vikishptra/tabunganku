@@ -11,11 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('detail_transaksis', function (Blueprint $table) {
-            $table->id();
+        Schema::create('detail_transaksi_banks', function (Blueprint $table) {
+            $table->string('id')->primary()->charset('utf8');
+            $table->string('id_user');
             $table->string('id_va_account');
             $table->bigInteger('amount');
             $table->string('status_trx');
+            $table->foreign('id_user')
+            ->references('id')
+            ->on('users')
+            ->onDelete('cascade');
             $table->foreign('id_va_account')
             ->references('id')
             ->on('account_bank_users')

@@ -8,12 +8,14 @@ use Illuminate\Http\Request;
 use App\Http\Requests\RegisterUserRequest;
 use App\Http\Requests\LoginUserRequest;
 use App\Models\DetailSaldoUser;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
     public function register(RegisterUserRequest $request) {
 
         try {
+            $id_ewallet = "ewallet-".Str::random(4);
             $verificationCode = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 4) . mt_rand(1000, 9999);
             $user = User::create(array_merge(
                 $request->validated(),
@@ -27,6 +29,7 @@ class UserController extends Controller
 
             $saldo_user = DetailSaldoUser::create(array_merge(
                 [
+                    'id' => $id_ewallet,
                     'id_user' => $user->id,
                     'saldo' => 0
                 ]
