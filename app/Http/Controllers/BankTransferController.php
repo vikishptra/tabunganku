@@ -54,11 +54,11 @@ class BankTransferController extends Controller
                         'va_account' => $response['account_number'],
                     ]);
 
-                    return $this->messagesScucess($response, "ok success", 201);
+                    return $this->messagesSuccess($transaksi, "ok success", 201);
 
 
-                }elseif ($data_request['status'] == "PENDING") {
-                    return $this->messagesError('Virtual Account Sedang Mohon Di Coba Lagi!', 400);
+                }else if ($data_request['status'] == "PENDING") {
+                    return $this->messagesError('Virtual Account Sedang Pending Mohon Di Coba Lagi!', 400);
                 }
             }else {
                 return $this->messagesError('Terjadi Kesalahan Mohon Coba Lagi', 400);
@@ -86,25 +86,14 @@ class BankTransferController extends Controller
             return $this->messagesSuccess($response, "OK", 200);
         } else {
             // Jika Virtual Account Bank belum dibuat sebelumnya, buat Virtual Account Bank baru pada Xendit dan simpan data ke database
-            $data_response = $this->createVaBankUser($request);
-
-            if ($data_response->isClientError() || $data_response->isServerError()) {
-                return $this->messagesError("Terjadi Kesalahan Mohon Di Coba Lagi", 400);
-            }
+            $response = $this->createVaBankUser($request);
+            $data = $response->getData();
+            $response = [
+                'va_account' => $data->data->va_account,
+                'bank_code' => $data->data->bank_code
+            ];
+            return $this->messagesSuccess($response, "OK", 200);
             
-            $va_account = AccountBankUser::where('id_user', $user->id)
-            
-            ->where('bank_code', $request->bank_code)
-            ->first();
-            if ($va_account && $va_account->bank_code === $request->bank_code) {
-                // Jika Virtual Account Bank sudah dibuat sebelumnya, tampilkan nomor Virtual Account Bank
-                $response = [
-                    'va_account' => $va_account->va_account,
-                    'bank_code' => $va_account->bank_code
-                ];
-
-                return $this->messagesSuccess($response, "OK", 200);
-            }
         }
     }catch (\Exception $e) {
         return $this->messagesError('Terjadi Kesalsahan ' . $e->getMessage(), 400);
