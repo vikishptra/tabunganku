@@ -155,7 +155,6 @@ class BankTransferController extends Controller
     public function calculateSimulasiTabungan(SimulasiTabunganRencanaRequest $request)
     {
     try {
-        date_default_timezone_set('Asia/Jakarta');
 
          // Ambil input dari user
         $targetTabungan = $request->input('target_tabungan');
