@@ -32,10 +32,12 @@ Route::group([
     Route::get('/user-profile',[UserController::class, 'userProfile']); 
     Route::get('/virtual-account', [BankTransferController::class, 'getVaBankUser']);  
     Route::post('/callback', [BankTransferController::class, 'callbackBank']);
-
-
     Route::post('/rule-bank', [RuleTransaksiController::class, 'createRuleBank']);
+    Route::post('/rencana-tabungan', [BankTransferController::class, 'calculateSimulasiTabungan']);
 });  
+
+
+
 
 Route::get('/unauthenticated', function () {
     return response()->json(['message' => 'Unauthenticated'], 401);

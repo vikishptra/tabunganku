@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Xendit\Xendit;
 use Validator;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 use App\Models\AccountBankUser;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\CreateGetVABankUser;
@@ -13,7 +14,7 @@ use Illuminate\Http\JsonResponse;
 use App\Models\DetailTransaksiBank;
 use App\Models\DetailSaldoUser;
 use App\Models\RuleTransaksiBank;
-
+use App\Http\Requests\SimulasiTabunganRencanaRequest;
 
 class BankTransferController extends Controller
 {
@@ -151,8 +152,75 @@ class BankTransferController extends Controller
 
     }
 
+    public function calculateSimulasiTabungan(SimulasiTabunganRencanaRequest $request)
+    {
+    try {
+        date_default_timezone_set('Asia/Jakarta');
+
+         // Ambil input dari user
+        $targetTabungan = $request->input('target_tabungan');
+        $jumlahUangSaatIni = $request->input('jumlah_uang_saat_ini');
+        $kontribusi = $request->input('nabung');
+
+         // Hitung total kontribusi
+         $totalKontribusi = $jumlahUangSaatIni;
+         foreach ($kontribusi as $frekuensi => $jumlah) {
+             if ($frekuensi == 'harian') {
+                 $totalKontribusi += $jumlah * 30;
+             } elseif ($frekuensi == 'mingguan') {
+                 $totalKontribusi += $jumlah * 4;
+             }
+         }
+         
+         // Hitung jumlah bulan dan hari yang dibutuhkan untuk mencapai target
+         $selisihUang = $targetTabungan - $jumlahUangSaatIni;
+         $jumlahHari = round($selisihUang / ($totalKontribusi / 30));
+         $jumlahBulan = floor($jumlahHari / 30);
+         $jumlahHari %= 30;
+
+        // Hitung tanggal mencapai target
+        $tanggal_mencapai_target = date('Y-m-d', strtotime('+' . $jumlahBulan . ' months +' . $jumlahHari . ' days'));
+
+        $tanggal_mencapai_target_indonesia = strftime('%d %B %Y', strtotime($tanggal_mencapai_target));
+        // Hitung tahun dan bulan
+        $tahun = date('Y', strtotime($tanggal_mencapai_target));
+        $bulan = date('F', strtotime($tanggal_mencapai_target));
+        $tanggal = date('d', strtotime($tanggal_mencapai_target));
+        $hari = date('l', strtotime($tanggal_mencapai_target));
+        $tanggal_mencapai_target_indonesia_hari = str_replace(
+            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
+            $hari
+        );
+        $tanggal_mencapai_target_indonesia_bulan = str_replace(
+            ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+            $bulan
+        );
+
+        // Buat response
+        $response = [
+            'target_tabungan' => $targetTabungan,
+            'jumlah_bulan' => $jumlahBulan,
+            'tahun' => $tahun,
+            'bulan' => $tanggal_mencapai_target_indonesia_bulan,
+            'tanggal' => $tanggal,
+            'hari' => $tanggal_mencapai_target_indonesia_hari,
+        ];
+
+        // Return response dalam format JSON
+        return response()->json($response);
+    } catch (\Exception $e) {
+        return $this->messagesError('Terjadi Kesalsahan ' . $e->getMessage(), 400);
+     }
+       
+    }
+    
+    
 
     
+    
+
 
 }
 
