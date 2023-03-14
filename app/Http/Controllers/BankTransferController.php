@@ -15,9 +15,13 @@ use App\Models\DetailTransaksiBank;
 use App\Models\DetailSaldoUser;
 use App\Models\RuleTransaksiBank;
 use App\Http\Requests\SimulasiTabunganRencanaRequest;
+use Illuminate\Support\Facades\App;
+
+
 
 class BankTransferController extends Controller
 {
+    
     public function createVaBankUser(CreateGetVABankUser $request){
         try {
             $secret_key = 'Basic ' . config('xendit.key_auth');
@@ -154,75 +158,82 @@ class BankTransferController extends Controller
 
     public function calculateSimulasiTabungan(SimulasiTabunganRencanaRequest $request)
     {
-    try {
+        try {
+            
+            // Ambil input dari user
+            $targetTabungan = $request->input('target_tabungan');
+            $jumlahUangSaatIni = $request->input('jumlah_uang_saat_ini');
+            $kontribusi = $request->input('nabung');
 
-         // Ambil input dari user
-        $targetTabungan = $request->input('target_tabungan');
-        $jumlahUangSaatIni = $request->input('jumlah_uang_saat_ini');
-        $kontribusi = $request->input('nabung');
+            // Hitung total kontribusi
+            $totalKontribusi = $jumlahUangSaatIni; // nilai awal
+            foreach ($kontribusi as $frekuensi => $jumlah) {
+                if ($frekuensi == 'harian') {
+                    $totalKontribusi += $jumlah * 30;
+                } elseif ($frekuensi == 'mingguan') {
+                    $totalKontribusi += $jumlah * 4;
+                } elseif ($frekuensi == 'bulanan') {
+                    $totalKontribusi += $jumlah;
+                }
+            }
+              
+          // Hitung jumlah bulan dan hari yang dibutuhkan untuk mencapai target
+          $selisihUang = $targetTabungan - $jumlahUangSaatIni;
+          if (isset($kontribusi['harian'])) {
+            $totalKontribusiPerHari = $kontribusi['harian'];
+            $jumlahHari = ceil(($targetTabungan - $jumlahUangSaatIni) / $totalKontribusiPerHari);
+            $jumlahBulan = floor($jumlahHari / 30);
+            $jumlahHari %= 30;
+        } elseif (isset($kontribusi['mingguan'])) {
+            $totalKontribusiPerMinggu = $kontribusi['mingguan'];
+            $totalKontribusiPerBulan = $totalKontribusiPerMinggu * 4;
+            $jumlahBulan = ceil(($targetTabungan - $jumlahUangSaatIni) / $totalKontribusiPerBulan);
+            $sisaUang = ($targetTabungan - $jumlahUangSaatIni) % $totalKontribusiPerBulan;
+            $jumlahHari = ceil($sisaUang / $totalKontribusiPerMinggu) * 7;
+        } elseif (isset($kontribusi['bulanan'])){
+            $totalKontribusiPerBulan = $kontribusi['bulanan'];
+            $jumlahBulan = ceil(($targetTabungan - $jumlahUangSaatIni) / $totalKontribusiPerBulan);
+            $jumlahHari = 0;
+        }else{
+            return $this->messagesError('Terjadi Kesalahan pilih harian / mingguan / bulanan', 400);
 
-         // Hitung total kontribusi
-         $totalKontribusi = $jumlahUangSaatIni;
-         foreach ($kontribusi as $frekuensi => $jumlah) {
-             if ($frekuensi == 'harian') {
-                 $totalKontribusi += $jumlah * 30;
-             } elseif ($frekuensi == 'mingguan') {
-                 $totalKontribusi += $jumlah * 4;
-             }
-         }
-         
-         // Hitung jumlah bulan dan hari yang dibutuhkan untuk mencapai target
-         $selisihUang = $targetTabungan - $jumlahUangSaatIni;
-         $jumlahHari = round($selisihUang / ($totalKontribusi / 30));
-         $jumlahBulan = floor($jumlahHari / 30);
-         $jumlahHari %= 30;
-
-        // Hitung tanggal mencapai target
+        }
+        
+        // Calculate the date of reaching the target
         $tanggal_mencapai_target = date('Y-m-d', strtotime('+' . $jumlahBulan . ' months +' . $jumlahHari . ' days'));
 
-        $tanggal_mencapai_target_indonesia = strftime('%d %B %Y', strtotime($tanggal_mencapai_target));
-        // Hitung tahun dan bulan
-        $tahun = date('Y', strtotime($tanggal_mencapai_target));
-        $bulan = date('F', strtotime($tanggal_mencapai_target));
-        $tanggal = date('d', strtotime($tanggal_mencapai_target));
-        $hari = date('l', strtotime($tanggal_mencapai_target));
-        $tanggal_mencapai_target_indonesia_hari = str_replace(
-            ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-            ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
-            $hari
-        );
-        $tanggal_mencapai_target_indonesia_bulan = str_replace(
-            ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-            ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
-            $bulan
-        );
+        // Convert date to Indonesian format
+        \Carbon\Carbon::setLocale('id_ID');
+        $tanggal_mencapai_target_indonesia_hari = ucfirst(\Carbon\Carbon::parse($tanggal_mencapai_target)->translatedFormat("l"));
+        $tanggal_mencapai_target_indonesia_bulan = ucfirst(\Carbon\Carbon::parse($tanggal_mencapai_target)->translatedFormat("F"));
 
-        // Buat response
+        // Create response
         $response = [
             'target_tabungan' => $targetTabungan,
             'jumlah_bulan' => $jumlahBulan,
-            'tahun' => $tahun,
+            'tahun' => \Carbon\Carbon::parse($tanggal_mencapai_target)->year,
             'bulan' => $tanggal_mencapai_target_indonesia_bulan,
-            'tanggal' => $tanggal,
+            'tanggal' => \Carbon\Carbon::parse($tanggal_mencapai_target)->day,
             'hari' => $tanggal_mencapai_target_indonesia_hari,
         ];
 
-        // Return response dalam format JSON
-        return response()->json($response);
-    } catch (\Exception $e) {
-        return $this->messagesError('Terjadi Kesalsahan ' . $e->getMessage(), 400);
-     }
-       
+
+       // Return response in JSON format
+       return response()->json($response);
+
+            // Return response dalam format JSON
+            return response()->json($response);
+        } catch (\Exception $e) {
+            return $this->messagesError('Terjadi Kesalahan ' . $e->getMessage(), 400);
+        }
     }
     
-    
+
+
 
     
-    
-
 
 }
-
 
 
 
